@@ -10,16 +10,18 @@ from google import genai
 from google.genai import types
 from django.shortcuts import render, get_object_or_404
 
-def chat_page(request, conversation_id):
-    # Retrieve the conversation or return a 404 page if it doesn't exist
-    conversation = get_object_or_404(Conversation, id=conversation_id)
-    
-    # Pass the conversation object to the template
-    return render(request, 'chat/chat.html', {'conversation': conversation})
-
-# Initialize the GenAI client. 
 # Initialize the GenAI client using the hidden key
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+
+def chat_page(request, conversation_id=None):
+    if conversation_id is None:
+        # Get or create a default conversation for visitors hitting '/'
+        conversation, _ = Conversation.objects.get_or_create(id=1)
+    else:
+        conversation = get_object_or_404(Conversation, id=conversation_id)
+    
+    # Notice we changed this to 'chat/index.html' to match your template
+    return render(request, 'chat/index.html', {'conversation': conversation})
 
 @csrf_exempt 
 def chat_api(request, conversation_id):
@@ -36,14 +38,7 @@ def chat_api(request, conversation_id):
             return JsonResponse({"error": "Message cannot be empty"}, status=400)
         
         # 2. Get the current conversation or return a 404 if it doesn't exist
-       def chat_page(request, conversation_id=None):
-    if conversation_id is None:
-        # Get or create a default conversation for visitors hitting '/'
-        conversation, _ = Conversation.objects.get_or_create(id=1)
-    else:
         conversation = get_object_or_404(Conversation, id=conversation_id)
-    
-    return render(request, 'chat/index.html', {'conversation': conversation})
         
         # 3. Retrieve the chat history from your SQL database
         past_messages = conversation.messages.all()
@@ -84,5 +79,5 @@ def chat_api(request, conversation_id):
             content=response.text
         )
         
-        # 9. Return the text back to the frontend (Fixed to match JS expectation: "response")
+        # 9. Return the text back to the frontend
         return JsonResponse({"response": response.text})
