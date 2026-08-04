@@ -36,10 +36,14 @@ def chat_api(request, conversation_id):
             return JsonResponse({"error": "Message cannot be empty"}, status=400)
         
         # 2. Get the current conversation or return a 404 if it doesn't exist
-        try:
-            conversation = Conversation.objects.get(id=conversation_id)
-        except Conversation.DoesNotExist:
-            return JsonResponse({"error": "Conversation not found"}, status=404)
+       def chat_page(request, conversation_id=None):
+    if conversation_id is None:
+        # Get or create a default conversation for visitors hitting '/'
+        conversation, _ = Conversation.objects.get_or_create(id=1)
+    else:
+        conversation = get_object_or_404(Conversation, id=conversation_id)
+    
+    return render(request, 'chat/index.html', {'conversation': conversation})
         
         # 3. Retrieve the chat history from your SQL database
         past_messages = conversation.messages.all()
