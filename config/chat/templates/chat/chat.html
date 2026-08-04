@@ -121,8 +121,7 @@
 
     <script>
         // Get the conversation ID from the URL (e.g., from /chat/1/)
-        const conversationId = window.location.pathname.split('/')[2];
-
+        const conversationId = "{{ conversation.id }}";
         function handleKeyPress(event) {
             if (event.key === "Enter") {
                 sendMessage();
