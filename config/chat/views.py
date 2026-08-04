@@ -21,7 +21,7 @@ def chat_page(request, conversation_id=None):
         conversation = get_object_or_404(Conversation, id=conversation_id)
     
     # Notice we changed this to 'chat/index.html' to match your template
-    return render(request, 'chat/index.html', {'conversation': conversation})
+    return render(request, 'chat/chat.html', {'conversation': conversation})
 
 @csrf_exempt 
 def chat_api(request, conversation_id):
