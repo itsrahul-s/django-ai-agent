@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Conversation, Message
 from google import genai
 from google.genai import types
+from google.genai.errors import ClientError # <-- Added the error handler import here
 from django.shortcuts import render, get_object_or_404
 
 # Initialize the GenAI client using the hidden key
@@ -20,7 +21,7 @@ def chat_page(request, conversation_id=None):
     else:
         conversation = get_object_or_404(Conversation, id=conversation_id)
     
-    # Notice we changed this to 'chat/index.html' to match your template
+    # Notice we changed this to 'chat/chat.html' to match your template
     return render(request, 'chat/chat.html', {'conversation': conversation})
 
 @csrf_exempt 
@@ -69,10 +70,14 @@ def chat_api(request, conversation_id):
             history=formatted_history
         )
         
-        # 7. Send the new prompt to get the AI response
-        response = chat.send_message(user_input)
+        # 7. Send the new prompt to get the AI response SAFELY
+        try:
+            response = chat.send_message(user_input)
+        except ClientError as e:
+            # If Google blocks the request due to the rate limit, return a friendly message
+            return JsonResponse({"response": "Whoa there! I am receiving too many requests right now. Please wait about 60 seconds and try again."})
         
-        # 8. Save the AI's response to the database
+        # 8. Save the AI's response to the database (Only if step 7 succeeds)
         Message.objects.create(
             conversation=conversation, 
             sender='model', 
